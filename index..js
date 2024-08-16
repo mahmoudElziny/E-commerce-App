@@ -28,6 +28,8 @@ app.use("/brand", router.brandRouter);
 app.use("/category", router.categoryRouter);
 //subCategory router 
 app.use("/subCategory", router.subCategoryRouter);
+//uer router
+app.use("/user", router.userRouter);
 
 
 //global responce error handler middleware

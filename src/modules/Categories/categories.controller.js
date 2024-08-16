@@ -1,8 +1,8 @@
 import slugify from "slugify";
 import { nanoid } from "nanoid";
 
-import { cloudinaryConfig, ErrorHandlerClass, uploadFile } from "../../utils/index.js";
-import { Category } from '../../../DB/models/index.js'
+import { cloudinaryConfig, ErrorHandlerClass, uploadFile, ApiFeatures } from "../../utils/index.js";
+import { Brand, Category, SubCategory } from '../../../DB/models/index.js'
 
 
 
@@ -148,9 +148,26 @@ export const deleteCategory = async (req, res, next) => {
     await cloudinaryConfig().api.delete_resources_by_prefix(categoryPath);
     await cloudinaryConfig().api.delete_folder(categoryPath);
 
-    //TODO delete relevent sub-categories from database
+    const deletedSubCategories = await SubCategory.deleteMany({categoryId: _id});
 
-    //TODO delete relevent brands from database
+    if(deletedSubCategories.deletedCount){
+        await Brand.deleteMany({categoryId: _id});
+    }
+
+    //TODO delete relevent products from database
 
     res.status(200).json({message: "Category deleted successfully", data: category});
+} 
+
+export const listCategories = async (req, res, next) => {
+    const mongooseQuery = Category.find();
+    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().filters();
+
+    const list = await ApiFeaturesInstance.mongooseQuery;
+
+    res.status(200).json({
+        message: "Categories found",
+        data: list
+    });
+
 }

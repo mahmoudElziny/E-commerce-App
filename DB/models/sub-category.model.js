@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import  mongoose  from "../global-setup.js";
 
 const { Schema, model } = mongoose;
 
@@ -45,4 +45,4 @@ const subCategorySchema = new Schema(
     { timestamps: true }
 );
 
-export const Subcategory = mongoose.models.Subcategory || model("Subcategory", subCategorySchema);
+export const SubCategory = mongoose.models.SubCategory || model("SubCategory", subCategorySchema);

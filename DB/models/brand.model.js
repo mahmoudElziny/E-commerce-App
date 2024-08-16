@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import  mongoose  from "../global-setup.js";
 
 const { Schema, model } = mongoose;
 
@@ -43,7 +43,7 @@ const brandSchema = new Schema(
         },
         subCategoryId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Subcategory",
+            ref: "SubCategory",
             required: true,
         },
     },
