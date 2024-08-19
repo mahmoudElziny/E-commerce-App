@@ -147,7 +147,8 @@ export const deleteSubCategory = async (req, res, next) => {
     await cloudinaryConfig().api.delete_resources_by_prefix(subCategoryPath);
     await cloudinaryConfig().api.delete_folder(subCategoryPath);
 
-    await Brand.deleteMany({subCategoryId: subCategory._id});
 
     res.status(200).json({message: "subCategory deleted successfully"});
 }
+
+// TODO Get all subCategories paginated with it’s brands 

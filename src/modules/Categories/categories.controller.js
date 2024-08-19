@@ -140,7 +140,7 @@ export const deleteCategory = async (req, res, next) => {
     const category = await Category.findByIdAndDelete(_id);
 
     if(!category){
-        return next(new ErrorHandlerClass({message: "Category not found", statusCode: 404, position: "at updateCategory api"}));
+        return next(new ErrorHandlerClass({message: "Category not found", statusCode: 404, position: "at deleteCategory api"}));
     }
 
     const categoryPath = `${process.env.UPLOADS_FOLDER}/categories/${category.customId}`;
@@ -148,20 +148,14 @@ export const deleteCategory = async (req, res, next) => {
     await cloudinaryConfig().api.delete_resources_by_prefix(categoryPath);
     await cloudinaryConfig().api.delete_folder(categoryPath);
 
-    const deletedSubCategories = await SubCategory.deleteMany({categoryId: _id});
-
-    if(deletedSubCategories.deletedCount){
-        await Brand.deleteMany({categoryId: _id});
-    }
-
-    //TODO delete relevent products from database
-
     res.status(200).json({message: "Category deleted successfully", data: category});
 } 
 
+
+//TODO Get all categories paginated with its subcatgories
 export const listCategories = async (req, res, next) => {
     const mongooseQuery = Category.find();
-    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().filters();
+    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().filters().sort();
 
     const list = await ApiFeaturesInstance.mongooseQuery;
 

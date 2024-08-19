@@ -15,10 +15,10 @@ const brandSchema = new Schema(
             required: true,
             unique: true,
         },
-        creaedBy: {
+        createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User", 
-            required: false, // TODO: change to true after adding User model (authentication)
+            required: true,
         },
         logo: {
             secure_url: {
@@ -49,5 +49,12 @@ const brandSchema = new Schema(
     },
     { timestamps: true }
 );
+
+
+brandSchema.post("findOneAndDelete", async function () {    
+    const _id = this.getQuery()._id;
+    //delete relevant products from database
+    await mongoose.models.Product.deleteMany({ brandId: _id });
+});
 
 export const Brand = mongoose.models.Brand || model("Brand", brandSchema);

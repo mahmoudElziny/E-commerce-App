@@ -1,4 +1,6 @@
+import { hashSync } from "bcrypt";
 import mongoose from "../global-setup.js";
+import { systemRoles } from "../../src/utils/index.js";
 
 const { Schema, model } = mongoose;
 
@@ -21,7 +23,7 @@ const userSchema = new Schema ({
     userType: {
         type: String,
         required: true,
-        enum: ["Buyer", "Admin"],
+        enum: [systemRoles.BUYER, systemRoles.ADMIN],
     },
     age: {
         type: Number,
@@ -31,8 +33,8 @@ const userSchema = new Schema ({
     },
     gender: {
         type: String,
-        enum: ["Male", "Female"],
-        default: "Male",
+        enum: ["male", "female"],
+        default: "male",
         required: true,
     },
     phone: {
@@ -46,6 +48,11 @@ const userSchema = new Schema ({
     isMarkedAsDeleted: {
         type: Boolean,
         default: false,
+    },
+    status: {
+        type: String,
+        enum: ["online", "Offline"],
+        default: "online",
     }
 }, { timestamps: true });
 

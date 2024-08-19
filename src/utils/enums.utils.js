@@ -11,3 +11,8 @@ export const DiscountType = {
     PERCENTAGE: "Percentage",
     FIXED: "Fixed",
 }
+
+export const CouponType = {
+    PERCENTAGE: "Percentage",
+    FIXED: "Fixed",
+}

@@ -143,12 +143,58 @@ export const updateProduct = async (req, res, next) => {
 }
 
 /**
+ * @api {delete} /product/delete/:_id Delete product
+ */
+export const deleteProduct = async (req, res, next) => {
+
+    //distruct product id from request params
+    const { _id } = req.params; 
+
+    //find the category by id
+    const product = await Product.findByIdAndDelete(_id).populate("categoryId").populate("subCategoryId").populate("brandId");
+
+    if(!product){
+        return next(new ErrorHandlerClass({message: "Product not found", statusCode: 404, position: "at deleteProduct api"}));
+    }
+
+    const productPath = `${process.env.UPLOADS_FOLDER}/categories/${product.categoryId.customId}/sub-categories/${product.subCategoryId.customId}/brands/${product.brandId.customId}/products/${product.images.customId}`;
+
+    await cloudinaryConfig().api.delete_resources_by_prefix(productPath);
+    await cloudinaryConfig().api.delete_folder(productPath);
+
+    res.status(200).json({message: "Product deleted successfully", data: product});
+} 
+
+/**
+ * @api {get} /product/:_id get product by id
+ */
+export const getProduct = async (req, res, next) => {
+
+    const { _id } = req.params;
+
+    const product = await Product.findById(_id);
+
+    if(!product) {
+        return next(new ErrorHandlerClass({
+            message: "Product not found",
+            statusCode: 400,
+            position: "at getProduct api"
+        }))
+    }
+
+    res.status(200).json({
+        message: "Product found successfully",
+        data: subCategory
+    })
+}
+
+/**
  * @api {get} /product/list list all products
  */
 export const listProducts = async (req, res, next) => {    
 
-    const mongooseQuery = Product.find();
-    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().filters();
+    const mongooseQuery = Product;
+    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().sort().filters();
     const products = await ApiFeaturesInstance.mongooseQuery;
     //success response
     res.status(200).json({

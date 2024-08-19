@@ -12,9 +12,11 @@ import { Brand } from "../../../DB/models/index.js";
 export const createBrand = async (req, res, next) => {
 
     const { categoryId, subCategoryId } = req.query;
-
-    const isSubCategory = await SubCategory.findById({_id: subCategoryId, categoryId: categoryId}).populate("categoryId");
-
+    
+    const { _id } = req.authUser;
+    
+    const isSubCategory = await SubCategory.findOne({_id: subCategoryId, categoryId: categoryId}).populate("categoryId");
+    
     if(!isSubCategory) {
         return next(new ErrorHandlerClass({message: "SubCategory not found", statusCode: 404, position: "at createBrand api"}));
     }
@@ -46,7 +48,8 @@ export const createBrand = async (req, res, next) => {
         },
         customId,
         categoryId: isSubCategory.categoryId._id,
-        subCategoryId: isSubCategory._id
+        subCategoryId: isSubCategory._id,
+        createdBy: _id
     };
 
     const newBrand = await Brand.create(brandObj);
@@ -144,10 +147,14 @@ export const deleteBrand = async (req, res, next) => {
     await cloudinaryConfig().api.delete_resources_by_prefix(brandPath);
     await cloudinaryConfig().api.delete_folder(brandPath);
 
-    //TODO delete related products
 
     res.status(200).json({
         message: "brand deleted succssfully"
     })
 
 }
+
+
+//TODO Get brands for specific subCategory or category or name
+
+//tODO Get all brands with its products 

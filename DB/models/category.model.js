@@ -40,4 +40,20 @@ const categorySchema = new Schema(
     { timestamps: true }
 );
 
+
+categorySchema.post("findOneAndDelete", async function () {    
+    const _id = this.getQuery()._id;
+    //delete relevant subCategories from database
+    const deletedSubCategories = await mongoose.models.SubCategory.deleteMany({ categoryId: _id });
+    //check if subCategories were deleted already
+    if(deletedSubCategories.deletedCount){
+        //delete the related brands from database
+        const deletedBrands = await mongoose.models.Brand.deleteMany({ categoryId: _id });
+        if(deletedBrands.deletedCount){
+            //delete the related products from database
+            await mongoose.models.Product.deleteMany({ categoryId: _id });            
+        }
+    }
+});
+
 export const Category = mongoose.models.Category || model("Category", categorySchema);

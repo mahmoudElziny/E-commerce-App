@@ -9,6 +9,10 @@ const { errorHandle } = middlewares;
 
 
 userRouter.post("/register", errorHandle(controller.registerUser));
+userRouter.get("/verify-email", errorHandle(controller.verifyEmail));
+userRouter.patch("/signIn", errorHandle(controller.signIn));
+
+
 
 export { userRouter };
 
