@@ -4,6 +4,8 @@ import { config } from 'dotenv';
 import { globalResponse } from './src/middlewares/index.js';
 import { connectionDB } from './DB/connection.js';
 import * as router from './src/modules/index.js';
+import { disableCouponsCron } from './src/utils/index.js';
+import { gracefulShutdown } from 'node-schedule';
 
 //env file 
 config();
@@ -16,6 +18,9 @@ const port = +process.env.PORT || 5000;
 
 //database connection
 connectionDB(); 
+
+//cron job
+disableCouponsCron();
 
 //middleware function to parse incoming JSON data from HTTP requests
 app.use(express.json());
@@ -36,6 +41,8 @@ app.use("/address", router.addressRouter);
 app.use("/cart", router.cartRouter);
 //coupon router
 app.use("/coupon", router.couponRouter);
+//order router
+app.use("/order", router.orderRouter);
 
 
 //global responce error handler middleware

@@ -54,7 +54,7 @@ export const getCouponById = async (req, res, next) => {
 }
 
 /**
- * @api {put} /coupon/:_id update coupon
+ * @api {put} /coupon/:couponId update coupon
  */
 export const updateCoupon = async (req, res, next) => {
     const {couponId} = req.params;
@@ -110,8 +110,40 @@ export const updateCoupon = async (req, res, next) => {
 }
 
 /**
+ * @api {patch} /coupon/enable/:couponId Disable or enable coupon
+*/
+export const disableEnableCoupon = async (req, res, next) => {
+    const {couponId} = req.params;
+    const userId = req.authUser._id;
+    const { enable } = req.body;
+
+    const coupon = await Coupon.findById(couponId);
+    if (!coupon) {
+        return next(new ErrorHandlerClass({ message: "Coupon not found", statusCode: 404, position: "at disableEnableCoupon api" }));
+    }
+
+    const logUpdatedObject = { couponId, updatedBy: userId, changes: {} };
+    
+    if(enable === true) {
+        coupon.isEnabled = true;
+        logUpdatedObject.changes.isEnabled = true;
+    }else if(enable === false) {
+        coupon.isEnabled = false;
+        logUpdatedObject.changes.isEnabled = false;
+    }
+
+    await coupon.save();
+    const log = await new CouponChangeLog(logUpdatedObject).save();
+
+    res.status(200).json({ message: "Coupon updated successfully", coupon, log });
+
+
+}
+
+/** 
  * @api {delete} /coupon/:_id delete coupon
  */
+
 
 /**
  * @todo add apply coupon api after creating order

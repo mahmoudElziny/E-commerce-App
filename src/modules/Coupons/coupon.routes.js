@@ -16,6 +16,7 @@ couponRouter.get("/:_id", auth(), authorization(systemRoles.ADMIN), errorHandle(
 
 couponRouter.put("/update/:couponId", auth(), authorization(systemRoles.ADMIN), validationMiddleware(updateCouponSchema), errorHandle(controller.updateCoupon));
 
+couponRouter.patch("/enable/:couponId", auth(), authorization(systemRoles.ADMIN), errorHandle(controller.disableEnableCoupon));
 
 
 export { couponRouter };
