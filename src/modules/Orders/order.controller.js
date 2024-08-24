@@ -1,7 +1,7 @@
 
 import { DateTime } from "luxon";
-import { Address, Cart, Order } from "../../../DB/models/index.js";
-import { ErrorHandlerClass, OrderStatus, PaymentMethods } from "../../utils/index.js";
+import { Address, Cart, Order, Product } from "../../../DB/models/index.js";
+import { ApiFeatures, ErrorHandlerClass, OrderStatus, PaymentMethods } from "../../utils/index.js";
 import { calculateCartTotal } from "../Cart/Utils/cart.utils.js";
 import { applyCoupon, validateCoupon } from "../Orders/Utils/order.utils.js";
 
@@ -81,4 +81,70 @@ export const createOrder = async (req, res, next) => {
 
     res.status(201).json({message: "Order created successfully", order: orderObj});
 
+}
+
+export const cancelOrder = async (req, res, next) => {
+    const { _id } = req.authUser;
+    const { orderId } = req.params;
+
+    //get order data 
+    const order = await Order.findOne({_id: orderId, userId: _id, orderStatus: {$in: [OrderStatus.PENDING, OrderStatus.PLACED, OrderStatus.CONFIRMED]}});
+    if(!order){
+        return next(new ErrorHandlerClass({message: "Order not found", statusCode: 404, position: "at cancelOrder api"}));
+    }   
+    //check if order bought before 3 days
+    const orderData = DateTime.fromJSDate(order.createdAt);
+    const currentDate = DateTime.now();
+    const diff = Math.ceil(Number(currentDate.diff(orderData, 'days').toObject().days).toFixed(2));
+    if(diff > 3){
+        return next(new ErrorHandlerClass({message: "Order can not be cancelled after 3 days", statusCode: 400, position: "at cancelOrder api"}));
+    }
+    //update order status to cancelled
+    order.orderStatus = OrderStatus.CANCELLED;
+    order.cancelledAt = DateTime.now();
+    order.cancelledBy = _id;
+
+    await Order.updateOne({_id: orderId}, order );
+    //update product model
+    for(const product of order.products){
+        await Product.updateOne({_id: product.productId}, {$inc: {stock: product.quantity}});
+    }
+
+    res.status(200).json({message: "Order cancelled successfully", order});
+
+}
+
+export const deliveredOrder = async (req, res, next) => {
+    const { _id } = req.authUser;
+    const { orderId } = req.params;
+
+    //get order data 
+    const order = await Order.findOne({_id: orderId, userId: _id, orderStatus: {$in: [ OrderStatus.PLACED, OrderStatus.CONFIRMED]}});
+    if(!order){
+        return next(new ErrorHandlerClass({message: "Order not found", statusCode: 404, position: "at deliveredOrder api"}));
+    }  
+
+    //update order status to delivered
+    order.orderStatus = OrderStatus.DELIVERED;
+    order.deliveredAt = DateTime.now();
+
+    await Order.updateOne({_id: orderId}, order );
+
+    res.status(200).json({message: "Order delivered successfully", order});
+}
+
+export const listOrders = async (req, res, next) => {
+    const { _id } = req.authUser;
+
+    const query = {userId: _id , ...req.query};
+
+    const populateArray = [
+        {path: "products.productId", select: "title images rating appliedPrice"},
+    ];
+
+    const ApiFeaturesInstance = new ApiFeatures(Order, query, populateArray).pagination().sort().filters();
+
+    const orders = await ApiFeaturesInstance.mongooseQuery;
+
+    res.status(200).json({message: "Orders fetched successfully", orders});
 }

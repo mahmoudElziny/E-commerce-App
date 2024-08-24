@@ -43,6 +43,8 @@ app.use("/cart", router.cartRouter);
 app.use("/coupon", router.couponRouter);
 //order router
 app.use("/order", router.orderRouter);
+//review router
+app.use("/review", router.reviewRouter);
 
 
 //global responce error handler middleware

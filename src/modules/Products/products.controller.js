@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 //utils
-import { ErrorHandlerClass, uploadFile, calculateProductPrice, ApiFeatures } from "../../utils/index.js";
+import { ErrorHandlerClass, uploadFile, calculateProductPrice, ApiFeatures, ReviewStatus} from "../../utils/index.js";
 //models
 import { Product } from "../../../DB/models/index.js";
 
@@ -12,6 +12,7 @@ import { Product } from "../../../DB/models/index.js";
  * @api {post} /product/add Add product 
  */
 export const addProduct = async (req, res, next) => {
+    const { _id } = req.authUser;
     //distructing the request body
     const { title, overview, specs, price, discountAmount, discountType, stock } = req.body;
     //images from req.file 
@@ -56,6 +57,7 @@ export const addProduct = async (req, res, next) => {
         categoryId: brandDocument.categoryId._id,
         subCategoryId: brandDocument.subCategoryId._id,
         brandId: brandDocument._id,
+        createdBy : _id
     };
 
     //create in database
@@ -193,8 +195,10 @@ export const getProduct = async (req, res, next) => {
  */
 export const listProducts = async (req, res, next) => {    
 
-    const mongooseQuery = Product;
-    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().sort().filters();
+    const ApiFeaturesInstance = new ApiFeatures(Product, req.query, [
+        { path: "Reviews", match: { reviewStatus: ReviewStatus.APPROVED } },
+    ]).pagination().filters();
+
     const products = await ApiFeaturesInstance.mongooseQuery;
     //success response
     res.status(200).json({

@@ -3,7 +3,7 @@
 export class ApiFeatures {
     //ex: mongooseQuery: product.paginate()
     //ex: query: req.query
-    constructor(model, query) {
+    constructor(model, query, populate) {
         // Product | Category | SubCategory |...
         this.model = model;
         // req.query
@@ -12,6 +12,8 @@ export class ApiFeatures {
         this.filterObject = {};
         // Will be the pagination object we needed to apply | {}
         this.paginationObject = {};
+        //will be populated data we needed to apply | []
+        this.populate = this.populate;
     }
 
     // pagination
@@ -25,8 +27,8 @@ export class ApiFeatures {
             page: parseInt(page)
         }
 
-        this.mongooseQuery = this.model.paginate(this.filterObject, this.paginationObject)
-        return this
+        this.mongooseQuery = this.model.paginate(this.filterObject, this.paginationObject);
+        return this;
     }
 
 

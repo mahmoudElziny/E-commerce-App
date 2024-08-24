@@ -101,10 +101,16 @@ const productSchema = new Schema({
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User",
-        required: false, //TODO
+        required: true, 
     },
 
-},{ timestamps: true});
+},{ timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true }, id: false});
+
+productSchema.virtual("Reviews", {
+    ref: "Review",
+    localField: "_id",
+    foreignField: "productId",
+});
 
 
 export const Product = mongoose.models.Product || model("Product", productSchema);
