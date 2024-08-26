@@ -15,6 +15,12 @@ orderRouter.put("/delivered/:orderId", auth(), errorHandle(controller.deliveredO
 
 orderRouter.get("/", auth(), authorization(systemRoles.BUYER), errorHandle(controller.listOrders));
 
+orderRouter.post("/stripePay/:orderId", auth(), authorization(systemRoles.BUYER), errorHandle(controller.paymentWithStripe));
+
+orderRouter.post("/webhook", errorHandle(controller.stripeWebhookLocal)); 
+
+orderRouter.post("/refund/:orderId", auth(), authorization(systemRoles.BUYER), errorHandle(controller.refundPayment)); 
+
 
 
 export { orderRouter };

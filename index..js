@@ -5,7 +5,6 @@ import { globalResponse } from './src/middlewares/index.js';
 import { connectionDB } from './DB/connection.js';
 import * as router from './src/modules/index.js';
 import { disableCouponsCron } from './src/utils/index.js';
-import { gracefulShutdown } from 'node-schedule';
 
 //env file 
 config();
@@ -45,6 +44,11 @@ app.use("/coupon", router.couponRouter);
 app.use("/order", router.orderRouter);
 //review router
 app.use("/review", router.reviewRouter);
+//if any route
+app.use("*", (req, res, next) => {
+    res.status(404).json({ message: "Route Not found" });
+});
+
 
 
 //global responce error handler middleware

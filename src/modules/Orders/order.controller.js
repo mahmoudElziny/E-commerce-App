@@ -4,6 +4,7 @@ import { Address, Cart, Order, Product } from "../../../DB/models/index.js";
 import { ApiFeatures, ErrorHandlerClass, OrderStatus, PaymentMethods } from "../../utils/index.js";
 import { calculateCartTotal } from "../Cart/Utils/cart.utils.js";
 import { applyCoupon, validateCoupon } from "../Orders/Utils/order.utils.js";
+import { createCheckoutSession, createStripeCoupon, createPaymentIntent, confirm, refundPaymentData } from "../../payment-handler/stripe.js";
 
 
 export const createOrder = async (req, res, next) => {
@@ -147,4 +148,85 @@ export const listOrders = async (req, res, next) => {
     const orders = await ApiFeaturesInstance.mongooseQuery;
 
     res.status(200).json({message: "Orders fetched successfully", orders});
+}
+
+export const paymentWithStripe = async (req, res, next) => {
+    const { orderId } = req.params;
+    const { _id } = req.authUser;
+
+    const order = await Order.findOne({_id: orderId, userId: _id, orderStatus: OrderStatus.PENDING});
+    if(!order){
+        return next(new ErrorHandlerClass({message: "Order not found", statusCode: 404, position: "at paymentWithStripe api"}));
+    }
+
+    const paymentObject  = {
+        customer_email: req.authUser.email,
+        metadata: {
+            orderId: order._id.toString(),
+        },
+        discounts: [],
+        line_items: order.products.map( (product) => {
+            return {
+                price_data: {
+                    currency: "egp",
+                    unit_amount: product.price * 100 , //in cents
+                    product_data: {
+                        name: req.authUser.userName,
+                    },
+                },
+                quantity: product.quantity
+            }
+        }),
+    }
+
+    if(order.couponId){
+        const stripeCoupon = await createStripeCoupon({couponId: order.couponId});
+        if(stripeCoupon.status) {
+            return next(new ErrorHandlerClass({message: stripeCoupon.message, statusCode: 400, position: "at paymentWithStripe api"}));
+        }
+        paymentObject.discounts.push({coupon: stripeCoupon.id});
+    }
+
+    const checkoutSession = await createCheckoutSession(paymentObject);
+    const paymentIntent = await createPaymentIntent({
+        amount: order.total,
+        currency: "egp",
+    });
+
+    order.payment_intent_id = paymentIntent.id;
+    await order.save();
+
+    res.status(200).json({message: "Payment session created successfully", checkoutSession, paymentIntent});
+
+}
+
+export const stripeWebhookLocal = async (req, res, next) => {
+
+    const orderId = req.body.data.object.metadata.orderId;
+
+    const confirmOrder = await Order.findByIdAndUpdate( orderId, {orderStatus: OrderStatus.CONFIRMED});
+
+    const confirmPaymentIntent = await confirm({paymentIntentId: confirmOrder.payment_intent_id});
+
+    res.status(200).json({message: "Order confirmed successfully", confirmOrder});
+}
+
+export const refundPayment = async (req, res, next) => {
+
+    const { orderId } = req.params;
+
+    const findOrder = await Order.findOne({_id: orderId, orderStatus: OrderStatus.CONFIRMED});
+    if(!findOrder){
+        return next(new ErrorHandlerClass({message: "Order not found", statusCode: 404, position: "at refundPaymentData api"}));
+    }
+    
+    const refund = await refundPaymentData({paymentIntentId: findOrder.payment_intent_id});
+    if(refund.status != 'succeeded') {
+        return next(new ErrorHandlerClass({message: refund.message, statusCode: 400, position: "at refundPaymentData api"}));
+    }
+    
+    findOrder.orderStatus = OrderStatus.REFUNDED;
+    await findOrder.save();
+
+    res.status(200).json({message: "Order refunded successfully"});
 }
