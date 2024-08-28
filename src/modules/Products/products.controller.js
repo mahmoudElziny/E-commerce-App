@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import slugify from "slugify";
 //utils
-import { ErrorHandlerClass, uploadFile, calculateProductPrice, ApiFeatures, ReviewStatus} from "../../utils/index.js";
+import { ErrorHandlerClass, uploadFile, calculateProductPrice, ApiFeatures, ReviewStatus, getSocket} from "../../utils/index.js";
 //models
 import { Product } from "../../../DB/models/index.js";
 
@@ -62,6 +62,9 @@ export const addProduct = async (req, res, next) => {
 
     //create in database
     const newProduct = await Product.create(productObject);
+
+    //socket event to notify all clients
+    getSocket().emit("productAdded", {message: "New Product Added"});
 
     //success response
     res.status(201).json({
@@ -195,11 +198,10 @@ export const getProduct = async (req, res, next) => {
  */
 export const listProducts = async (req, res, next) => {    
 
-    const ApiFeaturesInstance = new ApiFeatures(Product, req.query, [
-        { path: "Reviews", match: { reviewStatus: ReviewStatus.APPROVED } },
-    ]).pagination().filters();
+    const apiFeaturesInstance = new ApiFeatures(Product.find(), req.query).pagination().filter().sort().fields().search();
 
-    const products = await ApiFeaturesInstance.mongooseQuery;
+    const products = await apiFeaturesInstance.mongooseQuery;
+
     //success response
     res.status(200).json({
         message: "Products fetched successfully",

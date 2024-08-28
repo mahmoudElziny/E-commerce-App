@@ -1,10 +1,13 @@
 import express from 'express';
 import { config } from 'dotenv';
+import cors from 'cors';
+import { Server } from "socket.io";
 
 import { globalResponse } from './src/middlewares/index.js';
 import { connectionDB } from './DB/connection.js';
 import * as router from './src/modules/index.js';
 import { disableCouponsCron } from './src/utils/index.js';
+import { establishSocketConnection } from './src/utils/index.js';
 
 //env file 
 config();
@@ -14,6 +17,9 @@ const app = express();
 
 //port number 
 const port = +process.env.PORT || 5000;
+
+//cors
+app.use(cors());
 
 //database connection
 connectionDB(); 
@@ -55,4 +61,11 @@ app.use("*", (req, res, next) => {
 app.use(globalResponse);
 
 
-app.listen(port, () => console.log(`App listening on port ${port}`));
+const server = app.listen(port, () => console.log(`App listening on port ${port}`));
+
+const io = establishSocketConnection(server);   
+
+io.on("connection", (socket) => {
+    console.log(`User Connected: ${socket.id}`);
+
+})
