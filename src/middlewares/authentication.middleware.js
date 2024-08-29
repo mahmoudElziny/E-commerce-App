@@ -20,7 +20,7 @@ export const auth = () => {
             }
             
             //check token bearer
-            if(!token.startsWith("E-CommerceApp")){
+            if(!token.startsWith(process.env.TOKEN_PREFEX)){
                 return next( new ErrorHandlerClass({message: "Invalid Token", statusCode: 400, position: "at auth api"}) );
             }
             
@@ -30,7 +30,7 @@ export const auth = () => {
             //decode the token by token signature
             let decodedData;
             try {
-                decodedData = jwt.verify(originalToken, "accessToken");
+                decodedData = jwt.verify(originalToken, process.env.LOGIN_SECRET);
             
             } catch (error) {
                 return next( new ErrorHandlerClass({message: "Invalid Token payload", statusCode: 400, position: "at auth api"}) );

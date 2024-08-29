@@ -11,6 +11,9 @@ const { errorHandle } = middlewares;
 userRouter.post("/register", errorHandle(controller.registerUser));
 userRouter.get("/verify-email", errorHandle(controller.verifyEmail));
 userRouter.patch("/signIn", errorHandle(controller.signIn));
+userRouter.post("/loginWithGmail", errorHandle(controller.loginWithGmail));
+userRouter.post("/signUpWithGmail", errorHandle(controller.signUpWithGmail));
+
 
 
 

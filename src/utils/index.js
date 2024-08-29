@@ -7,4 +7,5 @@ export * from "./api-features.utils.js";
 export * from "./system-roles.utils.js";
 export * from "./general-rules.utils.js";
 export * from "./crons.utils.js";
-export * from "./socket.io.utils.js"
+export * from "./socket.io.utils.js";
+export * from "./qr-code.utils.js"

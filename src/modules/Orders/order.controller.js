@@ -1,7 +1,7 @@
 
 import { DateTime } from "luxon";
 import { Address, Cart, Order, Product } from "../../../DB/models/index.js";
-import { ApiFeatures, ErrorHandlerClass, OrderStatus, PaymentMethods } from "../../utils/index.js";
+import { ApiFeatures, ErrorHandlerClass, OrderStatus, PaymentMethods, generateQrCode } from "../../utils/index.js";
 import { calculateCartTotal } from "../Cart/Utils/cart.utils.js";
 import { applyCoupon, validateCoupon } from "../Orders/Utils/order.utils.js";
 import { createCheckoutSession, createStripeCoupon, createPaymentIntent, confirm, refundPaymentData } from "../../payment-handler/stripe.js";
@@ -79,8 +79,12 @@ export const createOrder = async (req, res, next) => {
     //clear the cart
     cart.products = [];
     await cart.save();
-
-    res.status(201).json({message: "Order created successfully", order: orderObj});
+    
+    //qr code
+    const qrCode = await generateQrCode([orderObj.total, orderObj._id, orderObj.products]);
+    
+    //success response
+    res.status(201).json({message: "Order created successfully", order: orderObj, qrCode});
 
 }
 

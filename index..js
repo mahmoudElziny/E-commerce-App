@@ -1,7 +1,6 @@
 import express from 'express';
 import { config } from 'dotenv';
 import cors from 'cors';
-import { Server } from "socket.io";
 
 import { globalResponse } from './src/middlewares/index.js';
 import { connectionDB } from './DB/connection.js';

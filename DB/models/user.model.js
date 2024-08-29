@@ -24,6 +24,7 @@ const userSchema = new Schema ({
         type: String,
         required: true,
         enum: [systemRoles.BUYER, systemRoles.ADMIN],
+        default: systemRoles.BUYER,
     },
     age: {
         type: Number,
@@ -51,9 +52,15 @@ const userSchema = new Schema ({
     },
     status: {
         type: String,
-        enum: ["online", "Offline"],
+        enum: ["online", "offline"],
         default: "online",
+    },
+    provider: {
+        type: String,
+        enum: ["System", "GOOGLE"],
+        default: "System",
     }
+
 }, { timestamps: true });
 
 userSchema.pre("save", function (next) {
