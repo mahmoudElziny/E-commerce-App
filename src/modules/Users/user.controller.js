@@ -1,4 +1,4 @@
-import { compareSync } from "bcrypt";
+import { compareSync, hashSync } from "bcrypt";
 import jwt from "jsonwebtoken";
 
 import { User, Address } from "../../../DB/models/index.js";
@@ -228,9 +228,150 @@ export const signUpWithGmail = async (req, res, next) => {
     res.status(201).json({ message: "User signed up", user: newUser });
 }
 
-// TODO Update account
-// TODO Delete account
-// TODO Get account data for loggedIn user
-// TODO 6. Update password
-// - Make the sent URL is one access time (  if you apply it with a reset password link not OTP )
-//TODO Update all previues phases depended on User model creation   
+export const updateAccount = async (req, res, next) => {
+    const user = req.authUser;
+    const newData = req.body;
+
+    //find the user by ID and update user data
+    const userUpdated = await User.findByIdAndUpdate(user._id, {
+        userName: newData.userName ? newData.userName : user.userName,
+        email: newData.email ? newData.email : user.email,
+        phone: newData.phone ? newData.phone : user.phone,
+        age: newData.age ? newData.age : user.age,
+        gender: newData.gender ? newData.gender : user.gender,
+    }, { new: true });
+
+    if (!userUpdated) {
+        return next(new ErrorHandlerClass({ message: "User not found", statusCode: 404, position: "at updateAccount api" }));
+    }
+
+    //success response 
+    return res.status(202).json({ message: "user updated successfully", data: userUpdated });
+}
+
+export const deleteAccount = async (req, res, next) => {
+    const { _id } = req.authUser;
+
+    //find the user by ID and soft delete 
+    const userDeleted = await User.findByIdAndUpdate(_id, { isMarkedAsDeleted: true }, { new: true });
+    if (!userDeleted) {
+        return next(new ErrorHandlerClass({ message: "User not found", statusCode: 404, position: "at deleteAccount api" }));
+    }
+
+    //success response 
+    return res.status(202).json({ message: "user deleted successfully", data: userDeleted });
+}
+
+export const getAccount = async (req, res, next) => {
+    const { _id } = req.authUser;
+    const user = await User.findById(_id);
+    if (!user) {
+        return next(new ErrorHandlerClass({ message: "User not found", statusCode: 404, position: "at getAccount api" }));
+    }
+
+    //success response 
+    return res.status(200).json({ message: "user found successfully", data: user });
+}
+
+export const updatePassword = async (req, res, next) => {
+    const { _id } = req.authUser;
+    const { oldPassword, newPassword } = req.body;
+
+    //find user by ID
+    const user = await User.findById(_id);
+
+    if (user) {
+        //password hashing
+        const passCheck = compareSync(oldPassword, user.password);
+        if (!passCheck) {
+            return next(new ErrorHandlerClass({ message: "Wrong password", statusCode: 400, position: "at updatePassword api" }));
+        }
+
+        //hashing the new password
+        const hashedPassword = hashSync(newPassword, +process.env.SALT_ROUNDS);
+        //update the new password
+        await User.updateOne({ _id }, { password: hashedPassword });
+        //success response
+        return res.status(202).json({ message: "password updated sucessfully" });
+    } else {
+        return next(new ErrorHandlerClass({ message: "User not found", statusCode: 404, position: "at updatePassword api" }));
+    }
+}
+
+export const forgetPassword = async (req, res, next) => {
+    const { email } = req.query;
+
+    //find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        return next(new ErrorHandlerClass({ message: "User not found", statusCode: 404, position: "at forgetPassword api" }));
+    }
+
+    //create token for reset password
+    const token = jwt.sign(
+        {
+            email: user.email,
+        },
+        process.env.RESET_PASSWORD_SECRET,
+        {
+            expiresIn: "5min",
+        }
+    );
+
+    //create reset password link
+    const resetLink = `${req.protocol}://${req.headers.host}/user/reset-password?token=${token}`;
+    //sending email
+    const isEmailSent = await sendEmailService({
+        to: email,
+        subject: "Welcome to E-Commerce App - Reset your Account Password",
+        html: `<a href=${resetLink}>Please reset your account password by clicking this link</a>`
+    });
+
+    if (isEmailSent.rejected.length) {
+        return next(new ErrorHandlerClass({
+            message: "Reset Password is failed",
+            statusCode: 500,
+            position: "at forgetPassword api",
+            data: isEmailSent
+        }
+        ));
+    }
+
+    //success response
+    res.status(200).json({
+        message: "Email sent successfully",
+        data: isEmailSent
+    });
+
+}
+
+export const resetPassword = async (req, res, next) => {
+    const { token } = req.query;
+    const { password } = req.body;
+    //distruct reset token 
+    let decodedData;
+    try {
+        decodedData = jwt.verify(token, process.env.RESET_PASSWORD_SECRET);
+
+    } catch (error) {
+        return next(new ErrorHandlerClass({ message: "Invalid Token payload", statusCode: 400, position: "at forgetPassword api" }));
+    }
+    //check if the token decoded is right
+    if(!decodedData?.email){
+        return next( new ErrorHandlerClass({message: "Invalid Token payload", statusCode: 400, position: "at forgetPassword api"}) );     
+    }
+
+    //find user by email    
+    const user = await User.findOne({ email: decodedData.email });
+    if (!user) {
+        return next(new ErrorHandlerClass({ message: "User not found", statusCode: 404, position: "at resetPassword api" }));
+    }
+
+    //hashing the new password
+    const hashedPassword = hashSync(password, +process.env.SALT_ROUNDS);
+    //update the new password
+    await User.updateOne({ email: decodedData.email }, { password: hashedPassword });
+    //success response
+    return res.status(202).json({ message: "password updated sucessfully" });
+}
