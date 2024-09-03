@@ -27,4 +27,6 @@ subCategoryRouter.put("/update/:_id",
 
 subCategoryRouter.delete("/delete/:_id", auth(), authorization(systemRoles.ADMIN), errorHandle(controller.deleteSubCategory)); 
 
+subCategoryRouter.get("/list", errorHandle(controller.listSubCategories));
+
 export { subCategoryRouter }

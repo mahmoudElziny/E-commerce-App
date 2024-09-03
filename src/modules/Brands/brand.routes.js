@@ -30,5 +30,8 @@ brandRouter.put('/update/:_id',
 
 brandRouter.delete('/delete/:_id', auth(), authorization(systemRoles.ADMIN), errorHandle(controller.deleteBrand));
 
+brandRouter.get('/list/:name', errorHandle(controller.listBrandsForSpecificSubCategoryOrCategory));
+
+brandRouter.get("/list", errorHandle(controller.listBrandsWithProducts));
 
 export { brandRouter }

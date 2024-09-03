@@ -15,10 +15,10 @@ const subCategorySchema = new Schema(
             required: true,
             unique: true,
         },
-        creaedBy: {
+        createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User", 
-            required: false, // TODO: change to true after adding User model (authentication)
+            required: true, 
         },
         images: {
             secure_url: {

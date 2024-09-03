@@ -2,8 +2,8 @@ import slugify from "slugify";
 import { nanoid } from "nanoid";
 
 import { cloudinaryConfig, ErrorHandlerClass, uploadFile } from "../../utils/index.js";
-import { Category, SubCategory } from "../../../DB/models/index.js";
-import { Brand } from "../../../DB/models/index.js";
+import { Category, SubCategory, Brand } from "../../../DB/models/index.js";
+import { ApiFeatures } from "../../utils/index.js";
 
 
 /**
@@ -154,7 +154,71 @@ export const deleteBrand = async (req, res, next) => {
 
 }
 
+export const listBrandsForSpecificSubCategoryOrCategory = async (req, res, next) => {
+    const { name } = req.params;
 
-//TODO Get brands for specific subCategory or category or name
+    const brands = await Brand.find({}).populate("categoryId").populate("subCategoryId");
 
-//tODO Get all brands with its products 
+    if(!brands){
+        return next(new ErrorHandlerClass({message: "Brands not found", statusCode: 404, position: "at listBrandsForSpecificSubCategoryOrCategory api"}));
+    }
+    
+    let matchedBrands = [];
+    let category = false;
+    let subategory = false;
+    
+    brands.forEach(brand => {
+        if(brand.subCategoryId.name === name){
+            subategory = true;
+            matchedBrands.push(brand);
+        }else if(brand.categoryId.name === name){
+            category = true;
+            matchedBrands.push(brand);
+        }
+    });
+    
+    let result = [];
+
+    matchedBrands.forEach(brand => {
+        if(category){
+            const { logo, _id, name, slug, customId, categoryId, createdAt, updatedAt } = brand;
+            const brandObj = {
+                logo, _id, name, slug, customId, categoryId, createdAt, updatedAt
+            }
+            result.push(brandObj);
+        }else if (subategory){
+            const { logo, _id, name, slug, customId, subCategoryId, createdAt, updatedAt } = brand;
+            const brandObj = {
+                logo, _id, name, slug, customId, subCategoryId, createdAt, updatedAt
+            }
+            result.push(brandObj);
+        }
+    });
+    
+    //success response
+    res.status(200).json({
+        message: "Brands found successfully",
+        data: result
+    })
+}
+
+export const listBrandsWithProducts = async (req, res, next) => {
+    const apiFeaturesInstance = new ApiFeatures(Brand.aggregate([
+        {
+            $lookup: {
+                from: "products",
+                localField: "_id",
+                foreignField: "brandId",
+                as: "products"
+            }
+        }
+    ]), req.query).pagination();
+
+    const brands = await apiFeaturesInstance.mongooseQuery;
+
+    res.status(200).json({
+        message: "Brands found",
+        data: brands
+    });
+}
+

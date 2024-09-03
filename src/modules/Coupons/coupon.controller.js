@@ -28,7 +28,7 @@ export const createCoupon = async (req, res, next) => {
 };
 
 /**
- * @api {get} /coupon get all coupon
+ * @api {get} /coupon get all coupons with enabled filter to get enabled coupons only
  */
 export const getAllCoupons = async (req, res, next) => {
     const { isEnabled } = req.query;
@@ -140,12 +140,4 @@ export const disableEnableCoupon = async (req, res, next) => {
 
 }
 
-/** 
- * @api {delete} /coupon/:_id delete coupon
- */
 
-
-/**
- * @todo add apply coupon api after creating order
- * @api {post} /coupon/apply apply coupon
- */

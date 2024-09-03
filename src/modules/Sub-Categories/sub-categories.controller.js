@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 
 import { cloudinaryConfig, ErrorHandlerClass, uploadFile } from "../../utils/index.js";
 import { Brand, Category, SubCategory } from "../../../DB/models/index.js";
+import { ApiFeatures } from "../../utils/index.js";
 
 
 /**
@@ -15,8 +16,10 @@ export const createSubCategory = async (req, res, next) => {
     if(!category) {
         return next(new ErrorHandlerClass({message: "Category not found", statusCode: 404, position: "at createSubCategory api"}));
     }
-
+    
+    const { _id } = req.authUser;
     const { name } = req.body;
+    createdBy = _id;
 
     const slug = slugify(name, {
         replacement: '_',
@@ -42,6 +45,7 @@ export const createSubCategory = async (req, res, next) => {
             public_id
         },
         customId,
+        createdBy,
         categoryId: category._id
     }
     
@@ -151,4 +155,22 @@ export const deleteSubCategory = async (req, res, next) => {
     res.status(200).json({message: "subCategory deleted successfully"});
 }
 
-// TODO Get all subCategories paginated with it’s brands 
+export const listSubCategories = async (req, res, next) => {
+    const apiFeaturesInstance = new ApiFeatures(SubCategory.aggregate([
+        {
+            $lookup: {
+                from: "brands",
+                localField: "_id",
+                foreignField: "subCategoryId",
+                as: "brands"
+            }
+        }
+    ]), req.query).pagination();
+
+    const subCategories = await apiFeaturesInstance.mongooseQuery;
+
+    res.status(200).json({
+        message: "SubCategories found",
+        data: subCategories
+    });
+}

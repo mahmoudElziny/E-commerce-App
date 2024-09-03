@@ -1,5 +1,6 @@
 import slugify from "slugify";
 import { nanoid } from "nanoid";
+import { ObjectId } from "mongodb";
 
 import { cloudinaryConfig, ErrorHandlerClass, uploadFile, ApiFeatures } from "../../utils/index.js";
 import { Brand, Category, SubCategory } from '../../../DB/models/index.js'
@@ -10,7 +11,8 @@ import { Brand, Category, SubCategory } from '../../../DB/models/index.js'
  * @api {post} /category/create a new Category
  */
 export const createCategory = async (req, res, next) => {
-
+    const { _id } = req.authUser;
+    createdBy = _id
     //distructing the request body
     const { name } = req.body;
 
@@ -39,6 +41,7 @@ export const createCategory = async (req, res, next) => {
             secure_url,
             public_id
         },
+        createdBy,
         customId
     }
 
@@ -152,16 +155,25 @@ export const deleteCategory = async (req, res, next) => {
 } 
 
 
-//TODO Get all categories paginated with its subcatgories
+//categories paginated with its subcatgories
 export const listCategories = async (req, res, next) => {
-    const mongooseQuery = Category.find();
-    const ApiFeaturesInstance = new ApiFeatures(mongooseQuery, req.query).pagination().filters().sort();
+    
+    const apiFeaturesInstance = new ApiFeatures(Category.aggregate([
+        {
+            $lookup: {
+                from: "subcategories",
+                localField: "_id",
+                foreignField: "categoryId",
+                as: "subCategories"
+            }
+        }
+    ]), req.query).pagination();
 
-    const list = await ApiFeaturesInstance.mongooseQuery;
+    const categories = await apiFeaturesInstance.mongooseQuery;
 
     res.status(200).json({
         message: "Categories found",
-        data: list
+        data: categories
     });
 
 }

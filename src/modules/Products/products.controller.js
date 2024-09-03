@@ -198,7 +198,9 @@ export const getProduct = async (req, res, next) => {
  */
 export const listProducts = async (req, res, next) => {    
 
-    const apiFeaturesInstance = new ApiFeatures(Product.find(), req.query).pagination().filter().sort().fields().search();
+    const apiFeaturesInstance = new ApiFeatures(Product.find()
+    .populate([{path: "Reviews", match: {reviewStatus: ReviewStatus.APPROVED}}]),
+    req.query).pagination().filter().sort().fields().search();
 
     const products = await apiFeaturesInstance.mongooseQuery;
 
