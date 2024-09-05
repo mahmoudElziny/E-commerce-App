@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 
 import { Coupon } from "../../DB/models/index.js";
-import { DiscountType } from "../utils/index.js";
+import { DiscountTypeEnum } from "../utils/index.js";
 
 
 //create checkout session
@@ -31,14 +31,14 @@ export const createStripeCoupon = async ({couponId}) => {
     }
     
     let couponObj = {};
-    if(isCoupon.couponType == DiscountType.FIXED) { 
+    if(isCoupon.couponType == DiscountTypeEnum.FIXED) { 
         couponObj = {
             name: isCoupon.couponCode,
             amount_off: isCoupon.couponAmount * 100, //in cents
             currency: "egp",
         };
     }
-    if(isCoupon.couponType == DiscountType.PERCENTAGE) {
+    if(isCoupon.couponType == DiscountTypeEnum.PERCENTAGE) {
         couponObj = {
             name: isCoupon.couponCode,
             percent_off: isCoupon.couponAmount,

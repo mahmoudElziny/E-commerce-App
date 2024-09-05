@@ -2,6 +2,8 @@ import { json } from "express";
 import cors from "cors";
 import * as router from './src/modules/index.js';
 import { globalResponse } from './src/middlewares/index.js';
+import { createHandler } from "graphql-http/lib/use/express";
+import { mainSchema } from "./src/GraphQL/schema/index.js";
 
 
 
@@ -12,7 +14,11 @@ app.use(cors());
 //middleware function to parse incoming JSON data from HTTP requests
 app.use(json());
 
-//Rest API
+
+//GraphQL router
+app.use('/graphql', createHandler({schema: mainSchema}));
+
+//REST API
 //product router 
 app.use("/product", router.productRouter);
 //brand router 

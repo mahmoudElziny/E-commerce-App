@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { Coupon } from "../../../../DB/models/index.js";
-import { DiscountType } from '../../../utils/index.js';
+import { DiscountTypeEnum } from '../../../utils/index.js';
 
 
 /**
@@ -37,12 +37,12 @@ export const validateCoupon = async (couponCode, userId) => {
 
 export const applyCoupon = (subTotal, coupon) => {
     let total = subTotal;
-    const { couponAmount: disountAmount , couponType: discountType} = coupon;
+    const { couponAmount: disountAmount , couponType: DiscountTypeEnum} = coupon;
 
-    if(disountAmount && discountType) {
-        if(discountType == DiscountType.PERCENTAGE){
+    if(disountAmount && DiscountTypeEnum) {
+        if(DiscountTypeEnum == DiscountTypeEnum.PERCENTAGE){
             total = subTotal - (subTotal * disountAmount) / 100;
-        }else if(discountType == DiscountType.FIXED){
+        }else if(DiscountTypeEnum == DiscountTypeEnum.FIXED){
             if(disountAmount > subTotal){
                 return total;
             }

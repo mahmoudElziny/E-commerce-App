@@ -7,7 +7,7 @@ export const Badges = {
     BEST_SELLER: "Best Seller",
 };
 
-export const DiscountType = {
+export const DiscountTypeEnum = {
     PERCENTAGE: "Percentage",
     FIXED: "Fixed",
 }

@@ -1,7 +1,7 @@
 import  mongoose  from "../global-setup.js";
 import slugify from "slugify";
 
-import { DiscountType, Badges, calculateProductPrice } from "../../src/utils/index.js";
+import { DiscountTypeEnum, Badges, calculateProductPrice } from "../../src/utils/index.js";
 
 
 const { Schema, model } = mongoose;
@@ -41,8 +41,8 @@ const productSchema = new Schema({
         },
         type: {
             type: String,
-            enum: Object.values(DiscountType),
-            default: DiscountType.PERCENTAGE,
+            enum: Object.values(DiscountTypeEnum),
+            default: DiscountTypeEnum.PERCENTAGE,
         },
     },
     appliedPrice: {

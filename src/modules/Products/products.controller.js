@@ -14,7 +14,7 @@ import { Product } from "../../../DB/models/index.js";
 export const addProduct = async (req, res, next) => {
     const { _id } = req.authUser;
     //distructing the request body
-    const { title, overview, specs, price, discountAmount, discountType, stock } = req.body;
+    const { title, overview, specs, price, discountAmount, DiscountTypeEnum, stock } = req.body;
     //images from req.file 
     if(!req.files.length){
         return next(new ErrorHandlerClass({message: "please upload an image", statusCode: 400, position: "at addProduct api"}));
@@ -47,7 +47,7 @@ export const addProduct = async (req, res, next) => {
         price,
         appliedDiscount: {
             amount: discountAmount,
-            type: discountType
+            type: DiscountTypeEnum
         },
         stock,
         images: {
@@ -81,7 +81,7 @@ export const updateProduct = async (req, res, next) => {
     //distructing product id from request params
     const { _id } = req.params;
     //distructing the request body
-    const { title, stock, overview, badge, price, discountAmount, discountType, specs } = req.body;
+    const { title, stock, overview, badge, price, discountAmount, DiscountTypeEnum, specs } = req.body;
 
     //find the product by id
     const product = await Product.findById(_id);
@@ -99,11 +99,11 @@ export const updateProduct = async (req, res, next) => {
     if(stock) product.stock = stock; 
     if(overview) product.overview = overview;
     if(badge) product.badge = badge;   
-    if(price || discountAmount || discountType) { 
+    if(price || discountAmount || DiscountTypeEnum) { 
         const newPrice = price || product.price;
         const discount = {};
         discount.amount = discountAmount || product.appliedDiscount.amount;
-        discount.type = discountType || product.appliedDiscount.type;
+        discount.type = DiscountTypeEnum || product.appliedDiscount.type;
         
         product.appliedPrice = calculateProductPrice(newPrice, discount);
 
