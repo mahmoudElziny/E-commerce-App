@@ -14,6 +14,10 @@ export const CreateCouponValidaor =  Joi.object({
         'number.min': 'Coupon amount must be greater than    0',
         'number.max': 'Coupon amount must be less than or equal to 100',
     }),
+    users: Joi.array().items(Joi.object({
+        userId: Joi.string().required(),
+        maxCount: Joi.number().min(1).required(),
+    })),
     token: Joi.string().required(), 
     createdBy: Joi.string().required(),
 })

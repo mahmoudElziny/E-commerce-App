@@ -1,0 +1,20 @@
+version: '2.29.2'
+services:
+  ecomm-app:
+    build: 
+      context: .
+      target: development
+    container_name: nodejs-ecommerce-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src:/app/src:ro
+      - ./DB:/app/DB:ro
+      - ./index.js:/app/index.js:ro
+      - ./initiate-app.js:/app/initiate-app.js:ro
+      - ./router-handler.js:/app/router-handler.js:ro
+    env_file:
+      - ./.env-dev
+  mongo-db: 
+    image: mongo
+    restart: always    

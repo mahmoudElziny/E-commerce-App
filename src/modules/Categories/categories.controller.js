@@ -12,7 +12,9 @@ import { Brand, Category, SubCategory } from '../../../DB/models/index.js'
  */
 export const createCategory = async (req, res, next) => {
     const { _id } = req.authUser;
-    createdBy = _id
+    
+    let createdBy = new ObjectId(_id);
+    
     //distructing the request body
     const { name } = req.body;
 

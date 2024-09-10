@@ -11,23 +11,21 @@ const CouponTypeEnum = new GraphQLEnumType({
     },
 }); 
 
-// const UsersType = new GraphQLObjectType({
-//     name: "UsersType",
-//     description: "This is the user type",
-//     fields: {
-//         type: new GraphQLList(
-//             new GraphQLObjectType({
-//                 name: "User",
-//                 description: "This is the user type",
-//                 fields: {
-//                     userId: { type: GraphQLID },
-//                     maxCount: { type: GraphQLInt },
-//                     usageCount: { type: GraphQLInt },
-//                 }
-//             })
-//         ),
-//     }
-// });
+const UsersType = new GraphQLObjectType({
+    name: "UsersType",
+    description: "This is the user type",
+    fields: {
+            user: {type: new GraphQLObjectType({
+                name: "User",
+                description: "This is the user type",
+                fields: {
+                    userId: { type: GraphQLID },
+                    maxCount: { type: GraphQLInt },
+                    usageCount: { type: GraphQLInt },
+                }
+            })}
+    }
+});
 
 export const CouponType = new GraphQLObjectType({
     name: "CouponType",
@@ -39,7 +37,7 @@ export const CouponType = new GraphQLObjectType({
         couponType: { type: CouponTypeEnum },
         from: { type: GraphQLString },
         till: { type: GraphQLString },
-        // users: { type: UsersType },
+        users: { type: new GraphQLList(UsersType) },
         isEnabled: { type: GraphQLBoolean },
         createdBy: { type: GraphQLID },
         createdAt: { type: GraphQLString },
@@ -55,5 +53,5 @@ export const CreateCouponArgs = {
     from: { type: GraphQLString },
     till: { type: GraphQLString },
     createdBy: { type: GraphQLID },
-    // users: { type: UsersType },
+    // users: { type: UsersType},
 }
